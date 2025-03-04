@@ -1,84 +1,102 @@
 <template>
-  <div class="p-6 bg-white shadow-md rounded-lg mx-auto">
-    <!-- Dropdown untuk memilih produk lain -->
-    <div class="mb-4">
-      <label
-        for="product-select"
-        class="block text-sm font-medium text-gray-700"
+  <div
+    class="min-h-screen bg-gradient-to-r from-yellow-400 via-red-500 to-blue-600 p-6"
+  >
+    <!-- Back Button -->
+    <button
+      @click="goBack"
+      class="bg-gray-900 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transform hover:scale-105 hover:bg-gray-700 transition-all duration-300"
+    >
+      ⬅️ Back
+    </button>
+    <div class="flex items-center justify-center">
+      <div
+        v-if="loading"
+        class="text-white text-lg font-semibold animate-pulse"
       >
-        Pilih Produk Lain:
-      </label>
-      <div class="flex gap-2">
-        <select
-          id="product-select"
-          v-model="selectedProductId"
-          class="w-full p-2 border rounded-lg focus:ring focus:ring-blue-300"
-        >
-          <option disabled value="">-- Pilih Produk --</option>
-          <option v-for="prod in productList" :key="prod.id" :value="prod.id">
-            {{ prod.title }}
-          </option>
-        </select>
-        <button
-          @click="changeProduct"
-          :disabled="!selectedProductId || loading"
-          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 disabled:bg-gray-400"
-        >
-          Pindah
-        </button>
+        Loading Product...
+      </div>
+
+      <div
+        v-else-if="product"
+        class="max-w-lg w-full bg-white/95 backdrop-blur-lg shadow-2xl rounded-xl p-8 border border-gray-200"
+      >
+        <!-- Product Title -->
+        <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-6">
+          ⚡ {{ product.name }}
+        </h1>
+
+        <div class="flex flex-col items-center space-y-6">
+          <!-- Product Details -->
+          <div class="w-full text-center">
+            <div class="grid grid-cols-2 gap-4 text-gray-800">
+              <p class="font-semibold">Firmness:</p>
+              <p>{{ product.firmness }}</p>
+
+              <p class="font-semibold">Size:</p>
+              <p>{{ product.size }}</p>
+
+              <p class="font-semibold">Growth Time:</p>
+              <p>{{ product.growth_time }} days</p>
+
+              <p class="font-semibold">Max Harvest:</p>
+              <p>{{ product.max_harvest }}</p>
+
+              <p class="font-semibold">Smoothness:</p>
+              <p>{{ product.smoothness }}</p>
+
+              <p class="font-semibold">Soil Dryness:</p>
+              <p>{{ product.soil_dryness }}</p>
+
+              <p class="font-semibold">Natural Gift Type:</p>
+              <p>{{ product.natural_gift_type }}</p>
+            </div>
+          </div>
+
+          <!-- Flavors Section -->
+          <div class="w-full text-center">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Flavors</h2>
+            <div class="flex flex-wrap justify-center gap-2">
+              <span
+                v-for="flavor in product.flavors"
+                :key="flavor.name"
+                class="bg-gray-800 text-white px-3 py-1 text-sm font-semibold rounded-lg shadow-md"
+              >
+                🍓 {{ flavor.name }} ({{ flavor.potency }})
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="text-white text-lg font-semibold">
+        Product not found. ❌
       </div>
     </div>
-
-    <!-- Kartu Produk -->
-    <ProductCard :product="product" :loading="loading" />
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, watch } from "vue";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { fetchProductById, fetchProducts } from "@/services/productService";
-import ProductCard from "@/components/product/ProductCard.vue";
+import { fetchProductById } from "@/services/productService";
+import type { Product } from "@/services/productService";
 
 const route = useRoute();
 const router = useRouter();
-const product = ref(null);
-const productList = ref([]);
-const selectedProductId = ref("");
+const product = ref<Product | null>(null);
 const loading = ref(true);
 
-// Function to fetch product details
-const loadProduct = async (id) => {
+const fetchData = async () => {
   loading.value = true;
-  try {
-    product.value = await fetchProductById(id);
-  } catch (error) {
-    console.error("Error fetching product:", error);
-  } finally {
-    loading.value = false;
-  }
+  const id = Number(route.params.id);
+  product.value = await fetchProductById(id);
+  loading.value = false;
 };
 
-// Fetch initial data when component is mounted
-onMounted(async () => {
-  productList.value = await fetchProducts();
-  selectedProductId.value = route.params.id;
-  await loadProduct(route.params.id);
-});
-
-// Watch route changes and update data dynamically
-watch(
-  () => route.params.id,
-  async (newId) => {
-    selectedProductId.value = newId;
-    await loadProduct(newId);
-  }
-);
-
-// Change product detail dynamically
-const changeProduct = () => {
-  if (selectedProductId.value) {
-    router.push(`/product/${selectedProductId.value}`);
-  }
+const goBack = () => {
+  router.back();
 };
+
+onMounted(fetchData);
 </script>

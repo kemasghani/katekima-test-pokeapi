@@ -73,7 +73,7 @@ const route = useRoute();
 
 // Keep "Products" active for all related routes
 const isProductsActive = computed(() => {
-  return ["/products", "/product-add", "/product-edit", "/product"].some(
+  return ["/products", "/product"].some(
     (path) => route.path.startsWith(path)
   );
 });

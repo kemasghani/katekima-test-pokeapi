@@ -1,145 +1,99 @@
 <template>
-  <div class="p-6 bg-gray-100 min-h-screen">
-    <!-- Search Input -->
-    <div class="mb-4">
-      <input
-        v-model="searchQuery"
-        placeholder="Cari Produk..."
-        class="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        @input="saveSearch"
-      />
-    </div>
-
-    <!-- Table -->
-    <div class="overflow-x-auto bg-white rounded-lg shadow-md">
-      <table class="w-full border-collapse">
-        <thead class="bg-blue-500 text-white">
-          <tr>
-            <th class="px-4 py-3 text-left">No</th>
-            <th
-              @click="sortBy('title')"
-              class="px-4 py-3 text-left cursor-pointer select-none"
-            >
-              Nama
-              <span class="ml-1">{{ sortOrder === "asc" ? "▲" : "▼" }}</span>
-            </th>
-            <th class="px-4 py-3 text-left">Kategori</th>
-            <th class="px-4 py-3 text-left">Harga</th>
-            <th class="px-4 py-3 text-center">Gambar</th>
-            <th class="px-4 py-3 text-center">Rating</th>
-            <th class="px-4 py-3 text-center">Review</th>
-            <th class="px-4 py-3 text-center">Aksi</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <!-- Skeleton Loader -->
-          <tr v-if="loading" v-for="i in 10" :key="i" class="border-b">
-            <td class="px-4 py-3">
-              <div class="h-5 w-6 bg-gray-300 animate-pulse rounded"></div>
-            </td>
-            <td class="px-4 py-3">
-              <div class="h-5 w-48 bg-gray-300 animate-pulse rounded"></div>
-            </td>
-            <td class="px-4 py-3">
-              <div class="h-5 w-24 bg-gray-300 animate-pulse rounded"></div>
-            </td>
-            <td class="px-4 py-3">
-              <div class="h-5 w-36 bg-gray-300 animate-pulse rounded"></div>
-            </td>
-            <td class="px-4 py-3 text-center">
-              <div
-                class="h-12 w-12 bg-gray-300 animate-pulse rounded-full mx-auto"
-              ></div>
-            </td>
-            <td class="px-4 py-3 text-center">
-              <div class="h-5 w-16 bg-gray-300 animate-pulse rounded"></div>
-            </td>
-            <td class="px-4 py-3 text-center">
-              <div class="h-5 w-12 bg-gray-300 animate-pulse rounded"></div>
-            </td>
-            <td class="px-4 py-3 text-center">
-              <div
-                class="h-5 w-20 bg-gray-300 animate-pulse rounded inline-block"
-              ></div>
-              <div
-                class="h-5 w-20 bg-gray-300 animate-pulse rounded inline-block ml-2"
-              ></div>
-            </td>
-          </tr>
-          <!-- Render Products -->
-          <tr
-            v-else
-            v-for="(product, index) in sortedProducts"
-            :key="product.id"
-            class="border-b hover:bg-gray-100 cursor-pointer"
-            @click="goToProductDetail(product.id)"
-          >
-            <td class="px-4 py-3">
-              {{ (currentPage - 1) * perPage + index + 1 }}
-            </td>
-            <td class="px-4 py-3 w-[27%]">
-              <p class="line-clamp-2">{{ product.title }}</p>
-            </td>
-            <td class="px-4 py-3">{{ product.category }}</td>
-            <td class="px-4 py-3">${{ product.price }}</td>
-            <td class="px-4 py-3 text-center">
-              <img
-                :src="product.image"
-                alt="Product Image"
-                class="h-12 w-12 mx-auto rounded-md"
-              />
-            </td>
-            <td class="px-4 py-3 text-center">{{ product.rating.rate }} ⭐</td>
-            <td class="px-4 py-3 text-center">{{ product.rating.count }}</td>
-            <td class="px-4 py-3 text-center">
-              <button
-                @click="$emit('edit', product.id)"
-                class="px-3 py-1 text-sm font-semibold text-white bg-green-500 rounded hover:bg-green-600"
-              >
-                Edit
-              </button>
-              <button
-                @click.stop="confirmDelete(product.id)"
-                class="px-3 py-1 ml-2 text-sm font-semibold text-white bg-red-500 rounded hover:bg-red-600"
-              >
-                Hapus
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pagination Controls -->
-    <div class="flex items-center justify-between mt-4">
-      <select
-        v-model="perPage"
-        @change="updatePerPage(perPage)"
-        class="p-2 border rounded-lg shadow-sm focus:ring focus:ring-blue-300"
+  <div
+    class="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-600 via-red-500 to-yellow-400 p-6"
+  >
+    <div
+      class="max-w-5xl w-full bg-white/80 backdrop-blur-lg shadow-2xl rounded-xl p-6 border border-gray-300"
+    >
+      <h1
+        class="text-4xl font-extrabold text-center text-blue-700 mb-6 drop-shadow-lg"
       >
-        <option value="10">10</option>
-        <option value="20">20</option>
-        <option value="30">30</option>
-      </select>
+        🏆 Pokémon Berry List 🏆
+      </h1>
 
-      <div>
+      <div class="flex justify-between items-center mb-4">
+        <input
+          v-model="searchQuery"
+          @input="updateSearchQuery"
+          type="text"
+          placeholder="Search berries..."
+          class="border p-2 rounded-lg w-64 shadow-sm focus:ring-2 focus:ring-blue-500"
+        />
+        <select
+          v-model="pageSize"
+          @change="updatePageSize"
+          class="border p-2 rounded-lg"
+        >
+          <option v-for="size in [10, 30, 50]" :key="size" :value="size">
+            {{ size }} per page
+          </option>
+        </select>
+      </div>
+
+      <div v-if="loading" class="flex justify-center items-center py-6">
+        <div class="text-lg font-semibold text-gray-700 animate-pulse">
+          Fetching Pokémon Berries...
+        </div>
+      </div>
+
+      <div v-else class="overflow-x-auto">
+        <table
+          class="w-full border-collapse shadow-lg rounded-xl overflow-hidden"
+        >
+          <thead>
+            <tr
+              class="bg-gradient-to-r from-blue-600 to-red-500 text-white text-lg"
+            >
+              <th class="border p-4 cursor-pointer" @click="toggleSort">
+                Name
+                <span v-if="sortOrder === 'asc'">⬆️</span>
+                <span v-else>⬇️</span>
+              </th>
+              <th class="border p-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="product in paginatedProducts"
+              :key="product.id"
+              class="odd:bg-yellow-100 even:bg-white hover:bg-yellow-300 transition-all duration-300"
+            >
+              <td
+                class="border p-4 text-lg font-medium text-gray-800 capitalize"
+              >
+                {{ product.name }}
+              </td>
+              <td class="border p-4 text-center">
+                <button
+                  @click="$emit('edit', product.id)"
+                  class="bg-blue-600 text-white px-5 py-2 rounded-full font-semibold shadow-md transform hover:scale-105 hover:bg-blue-800 transition-all duration-300"
+                >
+                  ⚡ Detail
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex justify-between items-center mt-4">
         <button
           @click="prevPage"
           :disabled="currentPage === 1"
-          class="px-4 py-2 mr-2 font-semibold text-white bg-blue-500 rounded disabled:bg-gray-300"
+          class="px-4 py-2 bg-gray-700 text-white rounded-md shadow-md disabled:opacity-50"
         >
-          Prev
+          ⬅️ Previous
         </button>
-        <span class="text-gray-700"
+        <span class="text-lg font-semibold"
           >Page {{ currentPage }} of {{ totalPages }}</span
         >
         <button
           @click="nextPage"
-          :disabled="currentPage >= totalPages || totalPages === 0"
-          class="px-4 py-2 ml-2 font-semibold text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-300"
+          :disabled="currentPage >= totalPages"
+          class="px-4 py-2 bg-gray-700 text-white rounded-md shadow-md disabled:opacity-50"
         >
-          Next
+          Next ➡️
         </button>
       </div>
     </div>
@@ -147,115 +101,76 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import Swal from "sweetalert2";
-import { fetchProducts, deleteProduct } from "@/services/productService";
-import { usePagination } from "@/composables/usePagination";
+import { ref, computed, watch, onMounted } from "vue";
+import type { Product } from "@/services/productService";
 
-interface Product {
-  id: number;
-  title: string;
-  price: number;
-  description: string;
-  category: string;
-  image: string;
-  rating: {
-    rate: number;
-    count: number;
-  };
-}
+const props = defineProps<{ products: Product[]; loading: boolean }>();
 
-// Reactive variables
-const products = ref<Product[]>([]);
-const loading = ref(true);
 const searchQuery = ref(localStorage.getItem("searchQuery") || "");
-const sortOrder = ref<"asc" | "desc">("asc");
+const pageSize = ref(Number(localStorage.getItem("pageSize")) || 10);
+const currentPage = ref(Number(localStorage.getItem("currentPage")) || 1);
+const sortOrder = ref(localStorage.getItem("sortOrder") || "asc");
 
-// Initialize router
-const router = useRouter();
-
-// Function to navigate to product detail page
-const goToProductDetail = (id: number) => {
-  router.push({ name: "ProductDetail", params: { id } });
-};
-
-// Filter products based on searchQuery
 const filteredProducts = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return products.value; // If search is empty, show all products
-  }
-  console.log(products.value);
-
-  const filtered = products.value.filter((product) =>
-    product.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
-
-  return filtered.length > 0 ? filtered : []; // If no results, return empty array
+  return props.products
+    .filter((p) =>
+      p.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
+    .sort((a, b) =>
+      sortOrder.value === "asc"
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name)
+    );
 });
-// Use Pagination composable with filtered data
-const { currentPage, perPage, totalPages, updatePerPage, prevPage, nextPage } =
-  usePagination(filteredProducts);
 
-// Fetch Data from API
-const fetchData = async () => {
-  loading.value = true;
-  const data = await fetchProducts();
-  products.value = data;
-  loading.value = false;
+const totalPages = computed(() =>
+  Math.ceil(filteredProducts.value.length / pageSize.value)
+);
+
+const paginatedProducts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredProducts.value.slice(start, start + pageSize.value);
+});
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+    localStorage.setItem("currentPage", String(currentPage.value));
+  }
 };
 
-// Sorting function
-const sortBy = (key: string) => {
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+    localStorage.setItem("currentPage", String(currentPage.value));
+  }
+};
+
+const toggleSort = () => {
   sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
+  localStorage.setItem("sortOrder", sortOrder.value);
 };
 
-// Save search query to localStorage
-const saveSearch = () => {
+const updateSearchQuery = () => {
+  currentPage.value = 1;
   localStorage.setItem("searchQuery", searchQuery.value);
 };
 
-// Paginate the filtered results
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * perPage.value;
-  const end = start + perPage.value;
-  return filteredProducts.value.slice(start, end);
-});
-
-// Sort the paginated products
-const sortedProducts = computed(() => {
-  return [...paginatedProducts.value].sort((a, b) => {
-    const valueA = a.title.toLowerCase();
-    const valueB = b.title.toLowerCase();
-    return sortOrder.value === "asc"
-      ? valueA.localeCompare(valueB)
-      : valueB.localeCompare(valueA);
-  });
-});
-
-const confirmDelete = (id: number) => {
-  Swal.fire({
-    title: "Hapus Produk?",
-    text: "Produk ini akan dihapus secara permanen!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
-    confirmButtonText: "Ya, hapus!",
-    cancelButtonText: "Batal",
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        await deleteProduct(id);
-        products.value = products.value.filter((product) => product.id !== id);
-        Swal.fire("Dihapus!", "Produk telah dihapus.", "success");
-      } catch (error) {
-        Swal.fire("Error!", "Gagal menghapus produk.", "error");
-      }
-    }
-  });
+const updatePageSize = () => {
+  currentPage.value = 1;
+  localStorage.setItem("pageSize", String(pageSize.value));
 };
 
-// Fetch data initially
-onMounted(fetchData);
+watch([searchQuery, pageSize, sortOrder], () => {
+  localStorage.setItem("searchQuery", searchQuery.value);
+  localStorage.setItem("pageSize", String(pageSize.value));
+  localStorage.setItem("sortOrder", sortOrder.value);
+});
+
+onMounted(() => {
+  if (currentPage.value > totalPages.value) {
+    currentPage.value = totalPages.value || 1;
+    localStorage.setItem("currentPage", String(currentPage.value));
+  }
+});
 </script>
