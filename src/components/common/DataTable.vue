@@ -44,6 +44,7 @@
             <tr
               class="bg-gradient-to-r from-blue-600 to-red-500 text-white text-lg"
             >
+              <th class="border p-4">No</th>
               <th class="border p-4 cursor-pointer" @click="toggleSort">
                 Name
                 <span v-if="sortOrder === 'asc'">⬆️</span>
@@ -54,10 +55,13 @@
           </thead>
           <tbody>
             <tr
-              v-for="product in paginatedProducts"
+              v-for="(product, index) in paginatedProducts"
               :key="product.id"
               class="odd:bg-yellow-100 even:bg-white hover:bg-yellow-300 transition-all duration-300"
             >
+              <td class="border p-4 text-lg font-medium text-gray-800">
+                {{ index + 1 + (currentPage - 1) * pageSize }}
+              </td>
               <td
                 class="border p-4 text-lg font-medium text-gray-800 capitalize"
               >
